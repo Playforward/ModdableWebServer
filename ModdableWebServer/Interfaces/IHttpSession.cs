@@ -1,13 +1,15 @@
-﻿using System.Net.Sockets;
+using System.Net.Sockets;
+using NetCoreServer;
 
 namespace ModdableWebServer.Interfaces;
 
 public interface IHttpSession : ISession
 {
-    Socket Socket { get; }
-    HttpResponse Response { get; }
+	Socket Socket { get; }
 
-    long SendResponse();
+	HttpResponse Response { get; }
 
-    long SendResponse(HttpResponse response);
+	long SendResponse();
+
+	long SendResponse(HttpResponse response);
 }

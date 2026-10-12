@@ -1,16 +1,20 @@
-﻿namespace ModdableWebServer.Interfaces;
+using System;
+
+namespace ModdableWebServer.Interfaces;
 
 public interface ISession
 {
-    Guid Id { get; }
-    IServer IServer { get; }
-    bool IsConnected { get; }
+	Guid Id { get; }
 
-    bool Disconnect();
+	IServer IServer { get; }
 
-    long Send(ReadOnlySpan<byte> buffer);
+	bool IsConnected { get; }
 
-    long Send(string text);
+	bool IsDisposed { get; }
 
-    bool IsDisposed { get; }
+	bool Disconnect();
+
+	long Send(ReadOnlySpan<byte> buffer);
+
+	long Send(string text);
 }

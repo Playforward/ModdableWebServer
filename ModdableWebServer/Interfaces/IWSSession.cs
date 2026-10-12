@@ -1,24 +1,32 @@
-﻿namespace ModdableWebServer.Interfaces;
+using System;
 
-public interface IWSSession : IHttpSession
+namespace ModdableWebServer.Interfaces;
+
+public interface IWSSession : IHttpSession, ISession
 {
-    bool Close();
-    bool Close(int status);
-    bool Close(int status, ReadOnlySpan<byte> buffer);
+	bool Close();
 
-    long SendText(ReadOnlySpan<char> text);
-    long SendText(ReadOnlySpan<byte> buffer);
+	bool Close(int status);
 
-    long SendBinary(ReadOnlySpan<char> text);
-    long SendBinary(ReadOnlySpan<byte> buffer);
+	bool Close(int status, ReadOnlySpan<byte> buffer);
 
-    long SendPing(ReadOnlySpan<char> text);
-    long SendPing(ReadOnlySpan<byte> buffer);
+	long SendText(ReadOnlySpan<char> text);
 
-    long SendPong(ReadOnlySpan<char> text);
-    long SendPong(ReadOnlySpan<byte> buffer);
+	long SendText(ReadOnlySpan<byte> buffer);
 
-    long SendClose(int status, ReadOnlySpan<char> text);
-    long SendClose(int status, ReadOnlySpan<byte> buffer);
+	long SendBinary(ReadOnlySpan<char> text);
+
+	long SendBinary(ReadOnlySpan<byte> buffer);
+
+	long SendPing(ReadOnlySpan<char> text);
+
+	long SendPing(ReadOnlySpan<byte> buffer);
+
+	long SendPong(ReadOnlySpan<char> text);
+
+	long SendPong(ReadOnlySpan<byte> buffer);
+
+	long SendClose(int status, ReadOnlySpan<char> text);
+
+	long SendClose(int status, ReadOnlySpan<byte> buffer);
 }
-

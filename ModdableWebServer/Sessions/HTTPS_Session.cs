@@ -1,44 +1,66 @@
-﻿using ModdableWebServer.Interfaces;
-using ModdableWebServer.Senders;
+using System;
 using System.Net.Sockets;
+using ModdableWebServer.Helper;
+using ModdableWebServer.Interfaces;
+using ModdableWebServer.Senders;
+using NetCoreServer;
 
 namespace ModdableWebServer.Sessions;
 
-public class HTTPS_Session(HttpsServer server) : HttpsSession(server), IHttpSession
+public class HTTPS_Session : HttpsSession, IHttpSession, ISession
 {
-    public IServer IServer => (IServer)Server;
-    private ServerSender Sender = default!;
+	private ServerSender Sender;
 
-    protected override void OnConnecting()
-    {
-        Sender = new()
-        {
-            Server = (IHttpServer)Server,
-            Session = this
-        };
-    }
+	public IServer IServer => (IServer)((SslSession)this).Server;
 
-    protected override void OnReceivedRequest(HttpRequest request)
-    {
-        if (request.Method == "GET" && !request.Url.Contains('?') && Cache.FindPath(request.Url))
-        {
-            var cache = Cache.Find(request.Url);
-            // Check again to make sure.
-            if (cache.Item1)
-                SendAsync(cache.Item2);
-        }
+	public HTTPS_Session(HttpsServer server)
+		: base(server)
+	{
+	}
 
-        bool isSent = Sender.SendRequest(request);
-        if (!isSent)
-            ServerEvents.OnReceivedFailed(IServer, request);
+	protected override void OnConnecting()
+	{
+		Sender = new ServerSender
+		{
+			Server = (IHttpServer)((SslSession)this).Server,
+			Session = this
+		};
+	}
 
-        if (IServer is IHttpServer { DoReturn404IfFail: true } && !isSent)
-            SendResponse(Response.MakeErrorResponse(404));
-    }
+	protected override void OnReceivedRequest(HttpRequest request)
+	{
+		if (CachedResponse.TryServe(request, ((HttpsSession)this).Cache, content => ((SslSession)this).SendAsync(content)))
+		{
+			return;
+		}
+		bool flag = Sender.SendRequest(request);
+		if (!flag)
+		{
+			ServerEvents.OnReceivedFailed(IServer, in request);
+		}
+		if (IServer is IHttpServer { DoReturn404IfFail: not false } && !flag)
+		{
+			((HttpsSession)this).SendResponse(((HttpsSession)this).Response.MakeErrorResponse(404, "", "text/plain; charset=UTF-8"));
+		}
+	}
 
-    protected override void OnReceivedRequestError(HttpRequest request, string error)
-        => ServerEvents.OnReceivedRequestError(IServer, request, error);
+	protected override void OnReceivedRequestError(HttpRequest request, string error)
+	{
+		ServerEvents.OnReceivedRequestError(IServer, in request, in error);
+	}
 
-    protected override void OnError(SocketError error)
-        => ServerEvents.OnSocketError(IServer, error);
+	protected override void OnError(Exception ex, SocketError error)
+	{
+		ServerEvents.OnSocketError(IServer, in ex, in error);
+	}
+
+	long IHttpSession.SendResponse()
+	{
+		return ((HttpsSession)this).SendResponse();
+	}
+
+	long IHttpSession.SendResponse(HttpResponse response)
+	{
+		return ((HttpsSession)this).SendResponse(response);
+	}
 }

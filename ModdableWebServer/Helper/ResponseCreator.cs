@@ -1,73 +1,75 @@
-﻿namespace ModdableWebServer.Helper;
+using System.Collections.Generic;
+using NetCoreServer;
+
+namespace ModdableWebServer.Helper;
 
 public class ResponseCreator
 {
-    private HttpResponse response;
-    public ResponseCreator(int status = 200)
-    {
-        response = new();
-        New(status);
-    }
+	public HttpResponse response;
 
-    public ResponseCreator(int status, Dictionary<string, string> Headers, string content)
-    {
-        response = new();
-        New(status);
-        SetHeaders(Headers);
-        SetBody(content);
-    }
+	public ResponseCreator(int status = 200)
+	{
+		response = new HttpResponse();
+		New(status);
+	}
 
-    public ResponseCreator(int status, Dictionary<string, string> Headers, byte[] content)
-    {
-        response = new();
-        New(status);
-        SetHeaders(Headers);
-        SetBody(content);
-    }
+	public ResponseCreator(int status, Dictionary<string, string> Headers, string content)
+	{
+		response = new HttpResponse();
+		New(status);
+		SetHeaders(Headers);
+		SetBody(content);
+	}
 
-    public void New(int status = 200)
-    {
-        response.Clear();
-        response.SetBegin(status);
-    }
+	public ResponseCreator(int status, Dictionary<string, string> Headers, byte[] content)
+	{
+		response = new HttpResponse();
+		New(status);
+		SetHeaders(Headers);
+		SetBody(content);
+	}
 
-    public void SetHeaders(Dictionary<string, string> Headers)
-    {
-        foreach (var Header in Headers)
-        {
-            SetHeader(Header.Key, Header.Value);
-        }
-    }
+	public void New(int status = 200)
+	{
+		response.Clear();
+		response.SetBegin(status, "HTTP/1.1");
+	}
 
-    public void SetHeader(string key, string value)
-    {
-        response.SetHeader(key, value);
-    }
+	public void SetHeaders(Dictionary<string, string> Headers)
+	{
+		foreach (KeyValuePair<string, string> Header in Headers)
+		{
+			SetHeader(Header.Key, Header.Value);
+		}
+	}
 
-    public void SetCookie(string name, string value, int maxAge = 86400000, string path = "", string domain = "", bool secure = true, bool strict = false, bool httpOnly = true)
-    {
-        response.SetCookie(name, value, maxAge, path, domain, secure, strict, httpOnly);
-    }
+	public void SetHeader(string key, string value)
+	{
+		response.SetHeader(key, value);
+	}
 
-    public void SetBody(string content)
-    {
-        response.SetBody(content);
-    }
+	public void SetCookie(string name, string value, int maxAge = 86400000, string path = "", string domain = "", bool secure = true, bool strict = false, bool httpOnly = true)
+	{
+		response.SetCookie(name, value, maxAge, path, domain, secure, strict, httpOnly);
+	}
 
-    public void SetBody(byte[] content)
-    {
-        response.SetBody(content);
-    }
+	public void SetBody(string content)
+	{
+		response.SetBody(content);
+	}
 
-    public void SetResponse(HttpResponse rsp)
-    {
-        response = rsp;
-    }
+	public void SetBody(byte[] content)
+	{
+		response.SetBody(content);
+	}
 
-    public HttpResponse GetResponse()
-    {
-        return response;
-    }
+	public void SetResponse(HttpResponse rsp)
+	{
+		response = rsp;
+	}
 
-    public static implicit operator HttpResponse(ResponseCreator creator) => creator.response;
+	public static implicit operator HttpResponse(ResponseCreator creator)
+	{
+		return creator.response;
+	}
 }

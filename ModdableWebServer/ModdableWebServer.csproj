@@ -1,13 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    Playforward's fork of ModdableWebServer 3.1.0.
+
+    The source upstream published 3.1.0 from (commit b440b36) is no longer on
+    GitHub, whose master is still 2.0.2, so this tree is 3.1.0 recovered from
+    the published MIT-licensed assembly with ILSpy, plus Playforward's fixes.
+    The version says both: 3.1.1 because it is newer than what upstream
+    shipped, "-playforward" so it can never be mistaken for, or resolved in
+    place of, an upstream release.
+  -->
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <LangVersion>14.0</LangVersion>
     <Title>$(AssemblyName)</Title>
     <Authors>SlejmUr</Authors>
     <Company>SlejmUr</Company>
-    <Description>Moddable Web Server Library</Description>
+    <Description>Moddable Web Server Library (Playforward fork of 3.1.0)</Description>
     <Copyright>SlejmUr</Copyright>
     <PackageProjectUrl>https://github.com/SlejmUr/ModdableWebServer</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -15,26 +26,26 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>ModdableWebServer;webserver;web</PackageTags>
     <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
-	<Version>2.0.2</Version>
-    <FileVersion>$(Version)</FileVersion>
+    <Version>3.1.1-playforward.1</Version>
+    <FileVersion>3.1.1</FileVersion>
     <AssemblyVersion>$(FileVersion)</AssemblyVersion>
-    <PackageReleaseNotes>$(Version)!</PackageReleaseNotes>
-	<IsAotCompatible>true</IsAotCompatible>
+    <PackageReleaseNotes>3.1.0 recovered from the published assembly, plus: a request reaches at most one route handler; a response served from the static-file cache is not dispatched again.</PackageReleaseNotes>
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <ItemGroup>
-		<None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
-		<None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\LICENSE.txt" Pack="true" PackagePath="\" />
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="NetCoreServer" Version="8.0.7" />
-		<PackageReference Include="Serilog" Version="4.3.0" />
-	</ItemGroup>
+  <!-- The versions 3.1.0 was published against (its nuspec). -->
+  <ItemGroup>
+    <PackageReference Include="NetCoreServer" Version="10.0.0" />
+    <PackageReference Include="Serilog" Version="4.3.0" />
+  </ItemGroup>
 
-	<ItemGroup>
-	  <Using Include="NetCoreServer" />
-	  <Using Include="Serilog" />
-	</ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="ModdableWebServer.Test" />
+  </ItemGroup>
 
 </Project>

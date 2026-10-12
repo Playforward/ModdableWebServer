@@ -1,59 +1,97 @@
-﻿using ModdableWebServer.Attributes;
-using ModdableWebServer.Helper;
-using ModdableWebServer.Interfaces;
-using ModdableWebServer.Sessions;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using ModdableWebServer.Attributes;
+using ModdableWebServer.Helper;
+using ModdableWebServer.Interfaces;
+using ModdableWebServer.Sessions;
+using NetCoreServer;
 
 namespace ModdableWebServer.Servers;
 
-public class HTTP_Server : HttpServer, IHttpServer
+public class HTTP_Server : HttpServer, IHttpServer, IServer
 {
-    public bool DoReturn404IfFail { get; set; } = true;
-    public Dictionary<HTTPAttribute, MethodInfo> HTTPAttributeToMethods { get; } = [];
-    public Dictionary<HTTPHeaderAttribute, MethodInfo> HeaderAttributeToMethods { get; } = [];
+	public bool DoReturn404IfFail { get; set; } = true;
 
-    public HTTP_Server(string address, int port) : base(address, port) { }
-    public HTTP_Server(IPAddress address, int port) : base(address, port) { }
-    public HTTP_Server(DnsEndPoint endpoint) : base(endpoint) { }
-    public HTTP_Server(IPEndPoint endPoint) : base(endPoint) { }
+	public Dictionary<HTTPAttribute, MethodInfo> HTTPAttributeToMethods { get; } = new Dictionary<HTTPAttribute, MethodInfo>();
 
-    [RequiresUnreferencedCode($"This require to get all assembly type.")]
-    public void OverrideAttributes(Assembly assembly)
-    {
-        HeaderAttributeToMethods.Override(assembly);
-        HTTPAttributeToMethods.Override(assembly);
-    }
+	public Dictionary<HTTPHeaderAttribute, MethodInfo> HeaderAttributeToMethods { get; } = new Dictionary<HTTPHeaderAttribute, MethodInfo>();
 
-    [RequiresUnreferencedCode($"This require to get all assembly type.")]
-    public void MergeAttributes(Assembly assembly)
-    {
-        HeaderAttributeToMethods.Merge(assembly);
-        HTTPAttributeToMethods.Merge(assembly);
-    }
+	public HTTP_Server(string address, int port)
+		: base(address, port)
+	{
+	}
 
-    public void OverrideAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
-    {
-        HeaderAttributeToMethods.Override(type);
-        HTTPAttributeToMethods.Override(type);
-    }
+	public HTTP_Server(IPAddress address, int port)
+		: base(address, port)
+	{
+	}
 
-    public void MergeAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
-    {
-        HeaderAttributeToMethods.Merge(type);
-        HTTPAttributeToMethods.Merge(type);
-    }
+	public HTTP_Server(DnsEndPoint endpoint)
+		: base(endpoint)
+	{
+	}
 
-    public void ClearAttributes()
-    {
-        HeaderAttributeToMethods.Clear();
-        HTTPAttributeToMethods.Clear();
-    }
+	public HTTP_Server(IPEndPoint endPoint)
+		: base(endPoint)
+	{
+	}
 
-    protected override void OnStarted() => ServerEvents.OnStarted(this);
-    protected override void OnStopped() => ServerEvents.OnStopped(this);
-    protected override TcpSession CreateSession() => new HTTP_Session(this);
-    protected override void OnError(SocketError error) => ServerEvents.OnSocketError(this, error);
+	[RequiresUnreferencedCode("This require to get all assembly type.")]
+	public void OverrideAttributes(Assembly assembly)
+	{
+		HeaderAttributeToMethods.Override(assembly);
+		HTTPAttributeToMethods.Override(assembly);
+	}
+
+	[RequiresUnreferencedCode("This require to get all assembly type.")]
+	public void MergeAttributes(Assembly assembly)
+	{
+		HeaderAttributeToMethods.Merge(assembly);
+		HTTPAttributeToMethods.Merge(assembly);
+	}
+
+	public void OverrideAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
+	{
+		HeaderAttributeToMethods.Override(type);
+		HTTPAttributeToMethods.Override(type);
+	}
+
+	public void MergeAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
+	{
+		HeaderAttributeToMethods.Merge(type);
+		HTTPAttributeToMethods.Merge(type);
+	}
+
+	public void ClearAttributes()
+	{
+		HeaderAttributeToMethods.Clear();
+		HTTPAttributeToMethods.Clear();
+	}
+
+	protected override void OnStarted()
+	{
+		IServer server = this;
+		ServerEvents.OnStarted(in server);
+	}
+
+	protected override void OnStopped()
+	{
+		IServer server = this;
+		ServerEvents.OnStopped(in server);
+	}
+
+	protected override TcpSession CreateSession()
+	{
+		return (TcpSession)(object)new HTTP_Session((HttpServer)(object)this);
+	}
+
+	protected override void OnError(SocketError error)
+	{
+		IServer server = this;
+		ServerEvents.OnSocketError(in server, (Exception)null, in error);
+	}
 }

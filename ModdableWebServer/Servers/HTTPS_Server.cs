@@ -1,59 +1,97 @@
-﻿using ModdableWebServer.Attributes;
-using ModdableWebServer.Helper;
-using ModdableWebServer.Interfaces;
-using ModdableWebServer.Sessions;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using ModdableWebServer.Attributes;
+using ModdableWebServer.Helper;
+using ModdableWebServer.Interfaces;
+using ModdableWebServer.Sessions;
+using NetCoreServer;
 
 namespace ModdableWebServer.Servers;
 
-public class HTTPS_Server : HttpsServer, IHttpServer
+public class HTTPS_Server : HttpsServer, IHttpServer, IServer
 {
-    public bool DoReturn404IfFail { get; set; } = true;
-    public Dictionary<HTTPAttribute, MethodInfo> HTTPAttributeToMethods { get; } = [];
-    public Dictionary<HTTPHeaderAttribute, MethodInfo> HeaderAttributeToMethods { get; } = [];
+	public bool DoReturn404IfFail { get; set; } = true;
 
-    public HTTPS_Server(SslContext context, string address, int port) : base(context, address, port) { }
-    public HTTPS_Server(SslContext context, IPAddress address, int port) : base(context, address, port) { }
-    public HTTPS_Server(SslContext context, DnsEndPoint endpoint) : base(context, endpoint) { }
-    public HTTPS_Server(SslContext context, IPEndPoint ipEndPoint) : base(context, ipEndPoint) { }
+	public Dictionary<HTTPAttribute, MethodInfo> HTTPAttributeToMethods { get; } = new Dictionary<HTTPAttribute, MethodInfo>();
 
-    [RequiresUnreferencedCode($"This require to get all assembly type.")]
-    public void OverrideAttributes(Assembly assembly)
-    {
-        HeaderAttributeToMethods.Override(assembly);
-        HTTPAttributeToMethods.Override(assembly);
-    }
+	public Dictionary<HTTPHeaderAttribute, MethodInfo> HeaderAttributeToMethods { get; } = new Dictionary<HTTPHeaderAttribute, MethodInfo>();
 
-    [RequiresUnreferencedCode($"This require to get all assembly type.")]
-    public void MergeAttributes(Assembly assembly)
-    {
-        HeaderAttributeToMethods.Merge(assembly);
-        HTTPAttributeToMethods.Merge(assembly);
-    }
+	public HTTPS_Server(SslContext context, string address, int port)
+		: base(context, address, port)
+	{
+	}
 
-    public void OverrideAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
-    {
-        HeaderAttributeToMethods.Override(type);
-        HTTPAttributeToMethods.Override(type);
-    }
+	public HTTPS_Server(SslContext context, IPAddress address, int port)
+		: base(context, address, port)
+	{
+	}
 
-    public void MergeAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
-    {
-        HeaderAttributeToMethods.Merge(type);
-        HTTPAttributeToMethods.Merge(type);
-    }
+	public HTTPS_Server(SslContext context, DnsEndPoint endpoint)
+		: base(context, endpoint)
+	{
+	}
 
-    public void ClearAttributes()
-    {
-        HeaderAttributeToMethods.Clear();
-        HTTPAttributeToMethods.Clear();
-    }
+	public HTTPS_Server(SslContext context, IPEndPoint ipEndPoint)
+		: base(context, ipEndPoint)
+	{
+	}
 
-    protected override void OnStarted() => ServerEvents.OnStarted(this);
-    protected override void OnStopped() => ServerEvents.OnStopped(this);
-    protected override SslSession CreateSession() => new HTTPS_Session(this);
-    protected override void OnError(SocketError error) => ServerEvents.OnSocketError(this, error);
+	[RequiresUnreferencedCode("This require to get all assembly type.")]
+	public void OverrideAttributes(Assembly assembly)
+	{
+		HeaderAttributeToMethods.Override(assembly);
+		HTTPAttributeToMethods.Override(assembly);
+	}
+
+	[RequiresUnreferencedCode("This require to get all assembly type.")]
+	public void MergeAttributes(Assembly assembly)
+	{
+		HeaderAttributeToMethods.Merge(assembly);
+		HTTPAttributeToMethods.Merge(assembly);
+	}
+
+	public void OverrideAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
+	{
+		HeaderAttributeToMethods.Override(type);
+		HTTPAttributeToMethods.Override(type);
+	}
+
+	public void MergeAttributes([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type? type)
+	{
+		HeaderAttributeToMethods.Merge(type);
+		HTTPAttributeToMethods.Merge(type);
+	}
+
+	public void ClearAttributes()
+	{
+		HeaderAttributeToMethods.Clear();
+		HTTPAttributeToMethods.Clear();
+	}
+
+	protected override void OnStarted()
+	{
+		IServer server = this;
+		ServerEvents.OnStarted(in server);
+	}
+
+	protected override void OnStopped()
+	{
+		IServer server = this;
+		ServerEvents.OnStopped(in server);
+	}
+
+	protected override SslSession CreateSession()
+	{
+		return (SslSession)(object)new HTTPS_Session((HttpsServer)(object)this);
+	}
+
+	protected override void OnError(SocketError error)
+	{
+		IServer server = this;
+		ServerEvents.OnSocketError(in server, (Exception)null, in error);
+	}
 }
